@@ -3,8 +3,18 @@ import UIKit
 @main
 final class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
-    let slate = SlateStore()
-    let settings = SlateSettingsStore()
+    let slate: SlateStore
+    let settings: SlateSettingsStore
+
+    override init() {
+        // UI tests pass this so every run starts from a fresh slate.
+        if CommandLine.arguments.contains("--reset-state"), let bundleIdentifier = Bundle.main.bundleIdentifier {
+            UserDefaults.standard.removePersistentDomain(forName: bundleIdentifier)
+        }
+        slate = SlateStore()
+        settings = SlateSettingsStore()
+        super.init()
+    }
 
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {

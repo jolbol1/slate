@@ -4,7 +4,7 @@ public struct SlateTimecode {
     public let framesPerSecond: Int
 
     public init(framesPerSecond: Int = 24) {
-        precondition([24, 25, 30].contains(framesPerSecond))
+        precondition(SlateSettingsStore.supportedFrameRates.contains(framesPerSecond))
         self.framesPerSecond = framesPerSecond
     }
 

@@ -2,15 +2,21 @@
 
 A native, offline UIKit slate targeting iOS 12 or later, including the original iPad Air. Open `Slate.xcodeproj` in Xcode 16 or later. There are no third-party dependencies.
 
+**Slate layout.** The striped clapper bar across the top is the clap button. Under it sit the production title, the date and the lock status, then a row of tags: camera roll, camera letter, sound roll, frame rate, INT/EXT, DAY/NIGHT and SYNC/MOS. The three big counter cards are Scene, Shot and Take. Below them are the written lines for director, camera (DP or operator), filter and notes, and at the bottom the lock button and the clock.
+
 - Scene and Take start at 1, with independent +/− buttons (0–9999).
 - Shot starts at **A** and its +/− buttons move through **A–Z**, stopping at either end. Existing saved shot numbers map to letters (1 → A, 2 → B, etc.; values outside 1–26 clamp to A or Z). Scene, Take and lock state are preserved.
-- Double-tap the lock button within 0.6 seconds to lock or unlock. A single tap does nothing. All six counter buttons are disabled while locked.
-- **Tap to Clap** plays a short, locally bundled sync sound and flashes the screen. It remains available while the counters are locked. Settings can switch between the natural clap and a clean beep, adjust volume, or turn the flash off.
-- Numbers and lock state save on every change in this app's local UserDefaults and restore on reopening. Deleting the app removes its saved values. Reinstall over the existing app with the same bundle identifier to retain them.
-- Sound, volume, flash and timecode frame-rate settings also save locally and restore on reopening.
-- Portrait and landscape layouts, large high-contrast numbers, and an awake display while the app is active.
-- A continuously updating `HH:MM:SS:FF` local time-of-day reference at **24 fps** by default, including while locked. Settings also offer 25 and 30 fps. It follows the iPad's clock; it is not synced to a camera or an external timecode source.
-- VoiceOver and Switch Control can activate the lock with their normal accessibility activation gesture.
+- Take returns to 1 whenever Scene or Shot changes. Settings can turn this off. Settings can also step Take up by one after each clap.
+- **Written details**: production, director, camera (DP or operator), camera roll, sound roll, filter and notes. Tap the production title, any written line, or the roll tags to open the **Slate Details** sheet. Each keystroke saves. Text is limited to the width of a real slate line.
+- **Tags** toggle in place with one tap: camera letter A–D, INT/EXT, DAY/NIGHT and SYNC/MOS. The FPS tag opens a frame-rate picker.
+- The date comes from the device clock and is shown as, for example, 7 SEP 2026.
+- Double-tap the lock button within 0.6 seconds to lock or unlock. A single tap does nothing. While locked, the counters, tags, written lines and the details editor are all disabled.
+- **Tap to Clap** plays a short, locally bundled sync sound, drops the sticks and flashes the screen. It remains available while the slate is locked. Settings can switch between the natural clap and a clean beep, adjust volume, or turn the flash off.
+- Counters, details, lock state and settings save on every change in this app's local UserDefaults and restore on reopening. Saves from earlier versions open with empty details. Deleting the app removes its saved values. Reinstall over the existing app with the same bundle identifier to retain them.
+- **Settings** groups: slate sound (clap or beep, volume, screen flash, preview), take counter (reset on new scene or shot, next take after clap), clock timecode (24, 25, 30, 48, 50 or 60 fps), slate (edit details, reset counters to Scene 1 · A · Take 1) and the Fully Free Apps promise. Reset and clear actions ask for confirmation.
+- Portrait and landscape layouts on iPad and iPhone, large high-contrast numbers, and an awake display while the app is active.
+- A continuously updating `HH:MM:SS:FF` local time-of-day reference at **24 fps** by default, including while locked. It follows the device clock; it is not synced to a camera or an external timecode source.
+- VoiceOver and Switch Control can activate the lock with their normal accessibility activation gesture. Every tag and written line has an accessibility label and value.
 
 The app follows the **Fully Free Apps** promise: free to download and use, with no ads, in-app purchases, accounts, analytics or tracking. It has no network code or third-party SDKs. Fully Free Apps is a trading name of MWD Studios Ltd. See [APP_STORE.md](APP_STORE.md) for the publishing plan and [PRIVACY.md](PRIVACY.md) for the privacy-policy draft.
 
@@ -50,6 +56,13 @@ Build for a simulator (no signing account required):
 xcodebuild -project Slate.xcodeproj -scheme Slate -sdk iphonesimulator -derivedDataPath build build CODE_SIGNING_ALLOWED=NO
 ```
 
-With an iPad simulator installed, choose it in Xcode and press **⌘U** to exercise the counter controls, lock, relaunch persistence, and portrait/landscape layouts.
+With an iPad simulator installed, choose it in Xcode and press **⌘U** to exercise the counter controls, details editor, lock, relaunch persistence, and portrait/landscape layouts. The UI tests launch the app with `--reset-state`, which clears the app's saved values in that simulator.
+
+To run the UI tests on one simulator and collect screenshots into `build/shots`:
+
+```sh
+scripts/screenshots.sh "iPad Air 11-inch (M4)" ipad
+scripts/screenshots.sh "iPhone 17" iphone
+```
 
 The clap and beep files are original, deterministic PCM audio generated by `scripts/generate-sounds.py`. They can be regenerated without downloading anything.

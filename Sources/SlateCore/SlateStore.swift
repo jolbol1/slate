@@ -22,6 +22,23 @@ public final class SlateStore {
         var shot = 1
         var take = 1
         var isLocked = false
+        var details = SlateDetails()
+
+        init() {}
+
+        private enum CodingKeys: String, CodingKey {
+            case scene, shot, take, isLocked, details
+        }
+
+        /// Saves from before `details` existed decode with empty details.
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            scene = container.value(.scene, default: 1)
+            shot = container.value(.shot, default: 1)
+            take = container.value(.take, default: 1)
+            isLocked = container.value(.isLocked, default: false)
+            details = container.value(.details, default: SlateDetails())
+        }
 
         subscript(counter: SlateCounter) -> Int {
             get {
@@ -46,6 +63,7 @@ public final class SlateStore {
     private var previousLockTap: TimeInterval?
 
     public var isLocked: Bool { snapshot.isLocked }
+    public var details: SlateDetails { snapshot.details }
 
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -60,6 +78,8 @@ public final class SlateStore {
             snapshot = Snapshot()
         }
     }
+
+    // MARK: Counters
 
     public func value(for counter: SlateCounter) -> Int {
         snapshot[counter]
@@ -79,6 +99,65 @@ public final class SlateStore {
         snapshot[counter] += step
         save()
     }
+
+    /// Take goes back to 1, as when a new scene or shot starts. Does nothing while locked.
+    public func resetTake() {
+        guard !isLocked, snapshot.take != 1 else { return }
+        snapshot.take = 1
+        save()
+    }
+
+    /// Scene 1, Shot A, Take 1. Does nothing while locked.
+    public func resetCounters() {
+        guard !isLocked else { return }
+        snapshot.scene = 1
+        snapshot.shot = 1
+        snapshot.take = 1
+        save()
+    }
+
+    // MARK: Details
+
+    /// All detail edits go through here; edits are ignored while locked.
+    public func updateDetails(_ change: (inout SlateDetails) -> Void) {
+        guard !isLocked else { return }
+        var details = snapshot.details
+        change(&details)
+        details.normalize()
+        guard details != snapshot.details else { return }
+        snapshot.details = details
+        save()
+    }
+
+    public func setText(_ text: String, for field: SlateTextField) {
+        updateDetails { $0[field] = text }
+    }
+
+    public func setCamera(_ index: Int) {
+        updateDetails { $0.camera = index }
+    }
+
+    public func cycleCamera() {
+        updateDetails { $0.camera = ($0.camera + 1) % SlateDetails.cameraLetters.count }
+    }
+
+    public func setLocation(_ location: SlateLocation) {
+        updateDetails { $0.location = location }
+    }
+
+    public func setTimeOfDay(_ timeOfDay: SlateTimeOfDay) {
+        updateDetails { $0.timeOfDay = timeOfDay }
+    }
+
+    public func setSoundMode(_ soundMode: SlateSoundMode) {
+        updateDetails { $0.soundMode = soundMode }
+    }
+
+    public func clearDetails() {
+        updateDetails { $0 = SlateDetails() }
+    }
+
+    // MARK: Lock
 
     /// Uses monotonic time; a lone tap or two taps more than 0.6s apart do nothing.
     @discardableResult
