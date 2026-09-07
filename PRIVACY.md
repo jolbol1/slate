@@ -2,7 +2,7 @@
 
 Effective 7 September 2026
 
-Slate is published by Actually Free Apps.
+Slate is published by MWD Studios Ltd under the Fully Free Apps name.
 
 Slate does not collect, transmit, sell or share personal data. It contains no advertising, analytics, tracking technology, accounts or in-app purchases. The app does not request access to the microphone, camera, photos, contacts, location or other personal content.
 
@@ -10,4 +10,4 @@ Scene, Shot and Take values, lock state, sound choice, volume, flash preference 
 
 Slate has no third-party software development kits and makes no network requests. Its clap and beep sounds are included in the app.
 
-Questions about this policy can be sent to **[add the Actually Free Apps support email before publication]**.
+Questions about this policy can be sent to **support@fullyfreeapps.com**.

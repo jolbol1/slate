@@ -55,7 +55,7 @@ final class SlateSettingsViewController: UITableViewController {
         case 0: return "Slate sound"
         case 1: return "Output"
         case 2: return "Clock timecode"
-        default: return "Actually Free Apps"
+        default: return "Fully Free Apps"
         }
     }
 

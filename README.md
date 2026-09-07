@@ -12,7 +12,7 @@ A native, offline UIKit slate targeting iOS 12 or later, including the original 
 - A continuously updating `HH:MM:SS:FF` local time-of-day reference at **24 fps** by default, including while locked. Settings also offer 25 and 30 fps. It follows the iPad's clock; it is not synced to a camera or an external timecode source.
 - VoiceOver and Switch Control can activate the lock with their normal accessibility activation gesture.
 
-The app follows the **Actually Free Apps** promise: free to download and use, with no ads, in-app purchases, accounts, analytics or tracking. It has no network code or third-party SDKs. See [APP_STORE.md](APP_STORE.md) for the publishing plan and [PRIVACY.md](PRIVACY.md) for the privacy-policy draft.
+The app follows the **Fully Free Apps** promise: free to download and use, with no ads, in-app purchases, accounts, analytics or tracking. It has no network code or third-party SDKs. Fully Free Apps is a trading name of MWD Studios Ltd. See [APP_STORE.md](APP_STORE.md) for the publishing plan and [PRIVACY.md](PRIVACY.md) for the privacy-policy draft.
 
 ## Install on your iPad for free
 
