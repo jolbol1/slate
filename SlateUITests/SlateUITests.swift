@@ -174,6 +174,33 @@ final class SlateUITests: XCTestCase {
         app.switches["reset-take-switch"].tap()
         app.navigationBars["Slate Settings"].buttons["Done"].tap()
         snapshot(app, "portrait")
+
+        // Next take after clap waits for the delay (10 s by default) and shows a countdown.
+        app.buttons["slate-settings"].tap()
+        XCTAssertTrue(app.navigationBars["Slate Settings"].waitForExistence(timeout: 5))
+        let advanceSwitch = app.switches["advance-take-switch"]
+        if (advanceSwitch.value as? String) != "1" { advanceSwitch.tap() }
+        XCTAssertEqual(app.staticTexts["advance-delay-value"].label, "10 s")
+        app.navigationBars["Slate Settings"].buttons["Done"].tap()
+        let takeAtClap = Int(take.value as? String ?? "")!
+        app.buttons["slate-clap"].tap()
+        XCTAssertEqual(take.value as? String, String(takeAtClap))
+        let status = app.staticTexts["slate-status"]
+        XCTAssertTrue((status.value as? String ?? "").hasPrefix("TAKE \(takeAtClap + 1) IN"))
+        expectation(for: NSPredicate { _, _ in (take.value as? String) == String(takeAtClap + 1) }, evaluatedWith: nil)
+        waitForExpectations(timeout: 14)
+        XCTAssertEqual(status.value as? String, "READY")
+
+        // A manual change during the countdown cancels the pending step.
+        app.buttons["slate-clap"].tap()
+        app.buttons["take-minus"].tap()
+        XCTAssertEqual(status.value as? String, "READY")
+        XCTAssertEqual(take.value as? String, String(takeAtClap))
+
+        app.buttons["slate-settings"].tap()
+        XCTAssertTrue(app.navigationBars["Slate Settings"].waitForExistence(timeout: 5))
+        app.switches["advance-take-switch"].tap()
+        app.navigationBars["Slate Settings"].buttons["Done"].tap()
     }
 
     @MainActor

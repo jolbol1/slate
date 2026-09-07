@@ -21,9 +21,13 @@ public final class SlateSettingsStore {
         static let framesPerSecond = "slate.settings.fps.v1"
         static let resetTake = "slate.settings.resetTake.v1"
         static let advanceTake = "slate.settings.advanceTake.v1"
+        static let advanceDelay = "slate.settings.advanceDelay.v1"
     }
 
     public static let supportedFrameRates = [24, 25, 30, 48, 50, 60]
+    /// Seconds between a clap and the automatic step to the next take.
+    public static let takeAdvanceDelays: ClosedRange<TimeInterval> = 0...120
+    public static let defaultTakeAdvanceDelay: TimeInterval = 10
 
     private let defaults: UserDefaults
     public private(set) var sound: SlateSound
@@ -34,6 +38,8 @@ public final class SlateSettingsStore {
     public private(set) var resetsTakeOnNewShot: Bool
     /// Take steps up by one after each clap, so the slate is ready for the next take.
     public private(set) var advancesTakeAfterClap: Bool
+    /// Wait before that step, so the slate still shows the take that was just clapped.
+    public private(set) var takeAdvanceDelay: TimeInterval
 
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -48,9 +54,20 @@ public final class SlateSettingsStore {
         flashEnabled = Self.bool(Key.flash, default: true, in: defaults)
         resetsTakeOnNewShot = Self.bool(Key.resetTake, default: true, in: defaults)
         advancesTakeAfterClap = Self.bool(Key.advanceTake, default: false, in: defaults)
+        if defaults.object(forKey: Key.advanceDelay) == nil {
+            takeAdvanceDelay = Self.defaultTakeAdvanceDelay
+        } else {
+            takeAdvanceDelay = Self.clampDelay(defaults.double(forKey: Key.advanceDelay))
+        }
 
         let savedFrameRate = defaults.integer(forKey: Key.framesPerSecond)
         framesPerSecond = Self.supportedFrameRates.contains(savedFrameRate) ? savedFrameRate : 24
+    }
+
+    private static func clampDelay(_ delay: TimeInterval) -> TimeInterval {
+        let range = takeAdvanceDelays
+        guard delay.isFinite else { return defaultTakeAdvanceDelay }
+        return min(range.upperBound, max(range.lowerBound, delay.rounded()))
     }
 
     private static func bool(_ key: String, default fallback: Bool, in defaults: UserDefaults) -> Bool {
@@ -86,5 +103,11 @@ public final class SlateSettingsStore {
     public func setAdvancesTakeAfterClap(_ enabled: Bool) {
         advancesTakeAfterClap = enabled
         defaults.set(enabled, forKey: Key.advanceTake)
+    }
+
+    /// Whole seconds, 0 to 120. 0 steps the take at the clap itself.
+    public func setTakeAdvanceDelay(_ delay: TimeInterval) {
+        takeAdvanceDelay = Self.clampDelay(delay)
+        defaults.set(takeAdvanceDelay, forKey: Key.advanceDelay)
     }
 }

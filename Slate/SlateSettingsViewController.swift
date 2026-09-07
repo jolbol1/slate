@@ -5,7 +5,7 @@ final class SlateSettingsViewController: UITableViewController {
     private enum Row {
         case sound(SlateSound)
         case volume, flash, preview
-        case resetTake, advanceTake
+        case resetTake, advanceTake, advanceDelay
         case frameRate(Int)
         case editDetails, resetCounters
         case promise, version
@@ -22,8 +22,8 @@ final class SlateSettingsViewController: UITableViewController {
                 footer: "Clap gives a natural sync point. Beep is easier to hear in a noisy room. Sound plays with Silent Mode on, and the screen flash marks the same instant.",
                 rows: SlateSound.allCases.map(Row.sound) + [.volume, .flash, .preview]),
         Section(title: "Take counter",
-                footer: "Reset returns Take to 1 whenever Scene or Shot changes. Next take after clap steps Take up by one when you tap the sticks, unless the slate is locked.",
-                rows: [.resetTake, .advanceTake]),
+                footer: "Reset returns Take to 1 whenever Scene or Shot changes. Next take after clap steps Take up by one after each clap, once the delay has passed, so the slate still shows the take that was just marked. A countdown shows next to the status. A manual change, a new clap or the lock cancels the pending step.",
+                rows: [.resetTake, .advanceTake, .advanceDelay]),
         Section(title: "Clock timecode",
                 footer: "Sets the frame count of the clock and the FPS shown on the slate. The clock is a local time-of-day reference, not camera-synchronised timecode.",
                 rows: SlateSettingsStore.supportedFrameRates.map(Row.frameRate)),
@@ -43,6 +43,8 @@ final class SlateSettingsViewController: UITableViewController {
     private let flashSwitch = UISwitch()
     private let resetTakeSwitch = UISwitch()
     private let advanceTakeSwitch = UISwitch()
+    private let delayStepper = UIStepper()
+    private let delayLabel = UILabel()
     /// Cells are built once; shared controls must never be moved between cells.
     private var cells: [[UITableViewCell]] = []
 
@@ -84,6 +86,17 @@ final class SlateSettingsViewController: UITableViewController {
             control.accessibilityIdentifier = identifier
             control.addTarget(self, action: action, for: .valueChanged)
         }
+
+        delayStepper.minimumValue = SlateSettingsStore.takeAdvanceDelays.lowerBound
+        delayStepper.maximumValue = SlateSettingsStore.takeAdvanceDelays.upperBound
+        delayStepper.stepValue = 1
+        delayStepper.value = settings.takeAdvanceDelay
+        delayStepper.accessibilityLabel = "Delay before next take"
+        delayStepper.accessibilityIdentifier = "advance-delay-stepper"
+        delayStepper.addTarget(self, action: #selector(delayChanged), for: .valueChanged)
+        delayLabel.font = SlateStyle.mono(17, weight: .regular)
+        delayLabel.textAlignment = .right
+        delayLabel.accessibilityIdentifier = "advance-delay-value"
 
         cells = Self.sections.map { $0.rows.map(makeCell) }
         update()
@@ -131,6 +144,21 @@ final class SlateSettingsViewController: UITableViewController {
             cell.textLabel?.text = "Next take after clap"
             cell.accessoryView = advanceTakeSwitch
             cell.selectionStyle = .none
+        case .advanceDelay:
+            cell.textLabel?.text = "Delay"
+            cell.selectionStyle = .none
+            let row = UIStackView(arrangedSubviews: [delayLabel, delayStepper])
+            row.axis = .horizontal
+            row.alignment = .center
+            row.spacing = 16
+            row.translatesAutoresizingMaskIntoConstraints = false
+            cell.contentView.addSubview(row)
+            NSLayoutConstraint.activate([
+                delayLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 56),
+                row.trailingAnchor.constraint(equalTo: cell.contentView.layoutMarginsGuide.trailingAnchor),
+                row.centerYAnchor.constraint(equalTo: cell.contentView.centerYAnchor),
+                cell.contentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 48)
+            ])
         case .frameRate(let rate):
             cell.textLabel?.text = "\(rate) fps"
             cell.accessibilityIdentifier = "fps-\(rate)"
@@ -165,6 +193,14 @@ final class SlateSettingsViewController: UITableViewController {
                 switch row {
                 case .sound(let sound):
                     cell.accessoryType = sound == settings.sound ? .checkmark : .none
+                case .advanceDelay:
+                    let seconds = Int(settings.takeAdvanceDelay)
+                    delayLabel.text = seconds == 0 ? "At clap" : "\(seconds) s"
+                    delayStepper.accessibilityValue = delayLabel.text
+                    let enabled = settings.advancesTakeAfterClap
+                    delayStepper.isEnabled = enabled
+                    delayLabel.textColor = enabled ? nil : SlateStyle.muted
+                    cell.textLabel?.isEnabled = enabled
                 case .frameRate(let rate):
                     cell.accessoryType = rate == settings.framesPerSecond ? .checkmark : .none
                 case .editDetails:
@@ -265,6 +301,13 @@ final class SlateSettingsViewController: UITableViewController {
 
     @objc private func advanceTakeChanged() {
         settings.setAdvancesTakeAfterClap(advanceTakeSwitch.isOn)
+        update()
+        onChange()
+    }
+
+    @objc private func delayChanged() {
+        settings.setTakeAdvanceDelay(delayStepper.value)
+        update()
         onChange()
     }
 }

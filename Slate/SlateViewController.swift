@@ -43,6 +43,8 @@ final class SlateViewController: UIViewController {
     private let flashView = UIView()
     private var clockTimer: Timer?
     private var layoutMode: LayoutMode?
+    /// When set, Take steps up by one once this moment passes.
+    private var pendingTakeAdvance: Date?
 
     private var columnEdges: [NSLayoutConstraint] = []
     private var clapHeight: NSLayoutConstraint!
@@ -184,6 +186,7 @@ final class SlateViewController: UIViewController {
             let card = CounterView(counter: counter)
             card.onStep = { [weak self] step in
                 guard let self = self else { return }
+                self.pendingTakeAdvance = nil
                 self.slate.change(counter, by: step)
                 if counter != .take, self.settings.resetsTakeOnNewShot { self.slate.resetTake() }
                 self.refresh()
@@ -335,9 +338,8 @@ final class SlateViewController: UIViewController {
         productionButton.isEnabled = !locked
         refreshDate()
 
-        statusLabel.text = locked ? "LOCKED" : "READY"
-        statusLabel.textColor = locked ? SlateStyle.accent : SlateStyle.muted
-        statusDot.backgroundColor = statusLabel.textColor
+        if locked || !settings.advancesTakeAfterClap { pendingTakeAdvance = nil }
+        refreshStatus()
 
         rollChip.show(key: "ROLL", value: details.roll.isEmpty ? "—" : details.roll.uppercased(), isPlaceholder: details.roll.isEmpty)
         cameraChip.show(key: "CAM", value: details.cameraLetter)
@@ -365,6 +367,24 @@ final class SlateViewController: UIViewController {
         timecodeCaption.attributedText = SlateStyle.caption("LOCAL TIME  ·  \(settings.framesPerSecond) FPS", size: 11, kern: 1.2)
     }
 
+    /// READY, LOCKED, or the countdown to the automatic next take.
+    private func refreshStatus() {
+        let text: String
+        if slate.isLocked {
+            text = "LOCKED"
+        } else if let due = pendingTakeAdvance {
+            let remaining = Int(ceil(max(0, due.timeIntervalSinceNow)))
+            text = "TAKE \(slate.value(for: .take) + 1) IN \(remaining)S"
+        } else {
+            text = "READY"
+        }
+        guard statusLabel.text != text else { return }
+        statusLabel.text = text
+        statusLabel.accessibilityValue = text
+        statusLabel.textColor = text == "READY" ? SlateStyle.muted : SlateStyle.accent
+        statusDot.backgroundColor = statusLabel.textColor
+    }
+
     private func refreshDate() {
         let text = Self.dateFormatter.string(from: Date()).uppercased()
         if dateLabel.text != text {
@@ -378,8 +398,14 @@ final class SlateViewController: UIViewController {
     @objc private func playSlate() {
         audioPlayer.play(settings.sound, volume: settings.volume)
         clapButton.animateClap()
-        if settings.advancesTakeAfterClap {
-            slate.change(.take, by: 1)
+        if settings.advancesTakeAfterClap, slate.canChange(.take, by: 1) {
+            if settings.takeAdvanceDelay <= 0 {
+                pendingTakeAdvance = nil
+                slate.change(.take, by: 1)
+            } else {
+                // A second clap restarts the wait; only one step is ever pending.
+                pendingTakeAdvance = Date(timeIntervalSinceNow: settings.takeAdvanceDelay)
+            }
             refresh()
         }
         guard settings.flashEnabled else { return }
@@ -465,6 +491,8 @@ final class SlateViewController: UIViewController {
     }
 
     @objc private func lockTapped() {
+        let wasLocked = slate.isLocked
+        defer { if slate.isLocked != wasLocked { pendingTakeAdvance = nil; refresh() } }
         if UIAccessibility.isVoiceOverRunning || UIAccessibility.isSwitchControlRunning {
             slate.activateAccessibleLock()
         } else {
@@ -497,7 +525,17 @@ final class SlateViewController: UIViewController {
         let secondChanged = timecodeLabel.text?.prefix(8) != text.prefix(8)
         timecodeLabel.text = text
         timecodeLabel.accessibilityValue = text
-        if secondChanged { refreshDate() }
+        guard secondChanged else { return }
+        refreshDate()
+        if let due = pendingTakeAdvance {
+            if Date() >= due {
+                pendingTakeAdvance = nil
+                slate.change(.take, by: 1)
+                refresh()
+            } else {
+                refreshStatus()
+            }
+        }
     }
 
     deinit {

@@ -6,14 +6,14 @@ A native, offline UIKit slate targeting iOS 12 or later, including the original 
 
 - Scene and Take start at 1, with independent +/− buttons (0–9999).
 - Shot starts at **A** and its +/− buttons move through **A–Z**, stopping at either end. Existing saved shot numbers map to letters (1 → A, 2 → B, etc.; values outside 1–26 clamp to A or Z). Scene, Take and lock state are preserved.
-- Take returns to 1 whenever Scene or Shot changes. Settings can turn this off. Settings can also step Take up by one after each clap.
+- Take returns to 1 whenever Scene or Shot changes. Settings can turn this off. Settings can also step Take up by one after each clap, after a delay of 0 to 120 seconds (10 by default) so the slate still shows the take that was just marked. The status shows a countdown, and a manual change, another clap or the lock cancels the pending step.
 - **Written details**: production, director, camera (DP or operator), camera roll, sound roll, filter and notes. Tap the production title, any written line, or the roll tags to open the **Slate Details** sheet. Each keystroke saves. Text is limited to the width of a real slate line.
 - **Tags** toggle in place with one tap: camera letter A–Z, INT/EXT, DAY/NIGHT and SYNC/MOS. The FPS tag opens a frame-rate picker.
 - The date comes from the device clock and is shown as, for example, 7 SEP 2026.
 - Double-tap the lock button within 0.6 seconds to lock or unlock. A single tap does nothing. While locked, the counters, tags, written lines and the details editor are all disabled.
 - **Tap to Clap** plays a short, locally bundled sync sound, drops the sticks and flashes the screen. It remains available while the slate is locked. Settings can switch between the natural clap and a clean beep, adjust volume, or turn the flash off.
 - Counters, details, lock state and settings save on every change in this app's local UserDefaults and restore on reopening. Saves from earlier versions open with empty details. Deleting the app removes its saved values. Reinstall over the existing app with the same bundle identifier to retain them.
-- **Settings** groups: slate sound (clap or beep, volume, screen flash, preview), take counter (reset on new scene or shot, next take after clap), clock timecode (24, 25, 30, 48, 50 or 60 fps), slate (edit details, reset counters to Scene 1 · A · Take 1) and the Fully Free Apps promise. Reset and clear actions ask for confirmation.
+- **Settings** groups: slate sound (clap or beep, volume, screen flash, preview), take counter (reset on new scene or shot, next take after clap with its delay), clock timecode (24, 25, 30, 48, 50 or 60 fps), slate (edit details, reset counters to Scene 1 · A · Take 1) and the Fully Free Apps promise. Reset and clear actions ask for confirmation.
 - Portrait and landscape layouts on iPad and iPhone, large high-contrast numbers, and an awake display while the app is active.
 - A continuously updating `HH:MM:SS:FF` local time-of-day reference at **24 fps** by default, including while locked. It follows the device clock; it is not synced to a camera or an external timecode source.
 - VoiceOver and Switch Control can activate the lock with their normal accessibility activation gesture. Every tag and written line has an accessibility label and value.

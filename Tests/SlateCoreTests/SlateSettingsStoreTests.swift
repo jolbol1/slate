@@ -19,6 +19,7 @@ final class SlateSettingsStoreTests: XCTestCase {
             XCTAssertEqual(settings.framesPerSecond, 24)
             XCTAssertTrue(settings.resetsTakeOnNewShot)
             XCTAssertFalse(settings.advancesTakeAfterClap)
+            XCTAssertEqual(settings.takeAdvanceDelay, 10)
         }
     }
 
@@ -31,6 +32,7 @@ final class SlateSettingsStoreTests: XCTestCase {
             settings.setFramesPerSecond(25)
             settings.setResetsTakeOnNewShot(false)
             settings.setAdvancesTakeAfterClap(true)
+            settings.setTakeAdvanceDelay(4)
 
             let reopened = SlateSettingsStore(defaults: defaults)
             XCTAssertEqual(reopened.sound, .beep)
@@ -39,6 +41,22 @@ final class SlateSettingsStoreTests: XCTestCase {
             XCTAssertEqual(reopened.framesPerSecond, 25)
             XCTAssertFalse(reopened.resetsTakeOnNewShot)
             XCTAssertTrue(reopened.advancesTakeAfterClap)
+            XCTAssertEqual(reopened.takeAdvanceDelay, 4)
+        }
+    }
+
+    func testTakeAdvanceDelayIsWholeSecondsWithinRange() {
+        withDefaults { defaults in
+            defaults.set(-3.0, forKey: "slate.settings.advanceDelay.v1")
+            let settings = SlateSettingsStore(defaults: defaults)
+            XCTAssertEqual(settings.takeAdvanceDelay, 0)
+            settings.setTakeAdvanceDelay(500)
+            XCTAssertEqual(settings.takeAdvanceDelay, 120)
+            settings.setTakeAdvanceDelay(2.6)
+            XCTAssertEqual(settings.takeAdvanceDelay, 3)
+            settings.setTakeAdvanceDelay(.nan)
+            XCTAssertEqual(settings.takeAdvanceDelay, 10)
+            XCTAssertEqual(SlateSettingsStore(defaults: defaults).takeAdvanceDelay, 10)
         }
     }
 
