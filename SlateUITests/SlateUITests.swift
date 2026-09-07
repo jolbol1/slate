@@ -37,6 +37,8 @@ final class SlateUITests: XCTestCase {
         XCTAssertFalse(app.buttons["scene-minus"].isEnabled)
         XCTAssertFalse(app.buttons["shot-plus"].isEnabled)
         XCTAssertFalse(app.buttons["shot-minus"].isEnabled)
+        let slateSound = app.buttons["slate-clap"]
+        XCTAssertTrue(slateSound.isEnabled)
 
         let clock = app.staticTexts["timecode"]
         let firstTime = clock.value as? String
@@ -61,6 +63,14 @@ final class SlateUITests: XCTestCase {
         lock.doubleTap()
         XCTAssertTrue(app.buttons["take-plus"].isEnabled)
 
+        app.buttons["slate-settings"].tap()
+        XCTAssertTrue(app.navigationBars["Slate Settings"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Clap"].exists)
+        XCTAssertTrue(app.staticTexts["Beep"].exists)
+        app.staticTexts["Beep"].tap()
+        app.buttons["Done"].tap()
+        XCTAssertEqual(slateSound.label, "Play beep slate sound")
+
         XCUIDevice.shared.orientation = .portrait
         waitForButton(app.buttons["scene-plus"])
         XCTAssertTrue(app.buttons[shotStep == 1 ? "shot-minus" : "shot-plus"].isHittable)
@@ -70,6 +80,11 @@ final class SlateUITests: XCTestCase {
         add(portrait)
         app.buttons[shotStep == 1 ? "shot-minus" : "shot-plus"].tap()
         XCTAssertEqual(shot.value as? String, shotBefore)
+        app.buttons["slate-settings"].tap()
+        XCTAssertTrue(app.navigationBars["Slate Settings"].waitForExistence(timeout: 5))
+        app.staticTexts["Clap"].tap()
+        app.staticTexts["24 fps"].tap()
+        app.buttons["Done"].tap()
         XCUIDevice.shared.orientation = .landscapeLeft
     }
 

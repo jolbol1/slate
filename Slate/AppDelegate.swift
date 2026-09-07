@@ -4,12 +4,13 @@ import UIKit
 final class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     let slate = SlateStore()
+    let settings = SlateSettingsStore()
 
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         if #available(iOS 13.0, *) { return true }
         let window = UIWindow(frame: UIScreen.main.bounds)
-        window.rootViewController = SlateViewController(slate: slate)
+        window.rootViewController = SlateViewController(slate: slate, settings: settings)
         window.makeKeyAndVisible()
         self.window = window
         return true
@@ -41,7 +42,7 @@ final class SlateSceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = scene as? UIWindowScene,
               let delegate = UIApplication.shared.delegate as? AppDelegate else { return }
         let window = UIWindow(windowScene: windowScene)
-        window.rootViewController = SlateViewController(slate: delegate.slate)
+        window.rootViewController = SlateViewController(slate: delegate.slate, settings: delegate.settings)
         window.makeKeyAndVisible()
         self.window = window
     }

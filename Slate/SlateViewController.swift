@@ -11,9 +11,13 @@ private enum SlateStyle {
 /// Uses only APIs available on the original iPad Air's iOS 12.
 final class SlateViewController: UIViewController {
     private let slate: SlateStore
+    private let settings: SlateSettingsStore
+    private let audioPlayer = SlateAudioPlayer()
     private let titleLabel = UILabel()
     private let statusLabel = UILabel()
     private let statusDot = UIView()
+    private let clapButton = UIButton(type: .custom)
+    private let settingsButton = UIButton(type: .custom)
     private let topRule = UIView()
     private let bottomRule = UIView()
     private let separators = [UIView(), UIView()]
@@ -21,16 +25,17 @@ final class SlateViewController: UIViewController {
     private let hintLabel = UILabel()
     private let timecodeLabel = UILabel()
     private let timecodeCaption = UILabel()
-    private let timecode = SlateTimecode()
+    private let flashView = UIView()
     private var clockTimer: Timer?
     private var counters: [CounterView] = []
 
-    init(slate: SlateStore) {
+    init(slate: SlateStore, settings: SlateSettingsStore) {
         self.slate = slate
+        self.settings = settings
         super.init(nibName: nil, bundle: nil)
     }
 
-    required init?(coder: NSCoder) { fatalError("Use init(slate:)") }
+    required init?(coder: NSCoder) { fatalError("Use init(slate:settings:)") }
     override var prefersStatusBarHidden: Bool { true }
     override var prefersHomeIndicatorAutoHidden: Bool { true }
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask { .all }
@@ -47,7 +52,25 @@ final class SlateViewController: UIViewController {
         statusLabel.textAlignment = .right
         statusDot.layer.cornerRadius = 3.5
 
-        for child in [titleLabel, statusLabel, statusDot, topRule, bottomRule, lockButton, hintLabel, timecodeLabel, timecodeCaption] + separators {
+        clapButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
+        clapButton.layer.cornerRadius = 12
+        clapButton.backgroundColor = SlateStyle.accent
+        clapButton.setTitleColor(SlateStyle.background, for: .normal)
+        clapButton.accessibilityIdentifier = "slate-clap"
+        clapButton.accessibilityHint = "Plays even while the scene, shot and take controls are locked"
+        clapButton.addTarget(self, action: #selector(playSlate), for: .touchUpInside)
+
+        settingsButton.setTitle("SETTINGS", for: .normal)
+        settingsButton.titleLabel?.font = .systemFont(ofSize: 11, weight: .bold)
+        settingsButton.setTitleColor(SlateStyle.ink, for: .normal)
+        settingsButton.layer.cornerRadius = 10
+        settingsButton.layer.borderWidth = 1
+        settingsButton.layer.borderColor = SlateStyle.rule.cgColor
+        settingsButton.accessibilityLabel = "Slate settings"
+        settingsButton.accessibilityIdentifier = "slate-settings"
+        settingsButton.addTarget(self, action: #selector(showSettings), for: .touchUpInside)
+
+        for child in [titleLabel, statusLabel, statusDot, clapButton, settingsButton, topRule, bottomRule, lockButton, hintLabel, timecodeLabel, timecodeCaption] + separators {
             view.addSubview(child)
         }
         for rule in [topRule, bottomRule] + separators { rule.backgroundColor = SlateStyle.rule }
@@ -82,7 +105,12 @@ final class SlateViewController: UIViewController {
         timecodeCaption.font = .systemFont(ofSize: 11, weight: .medium)
         timecodeCaption.textColor = SlateStyle.muted
         timecodeCaption.textAlignment = .right
-        timecodeCaption.text = "LOCAL TIME  ·  \(timecode.framesPerSecond) FPS"
+        timecodeCaption.accessibilityIdentifier = "timecode-caption"
+        flashView.backgroundColor = SlateStyle.ink
+        flashView.alpha = 0
+        flashView.isUserInteractionEnabled = false
+        flashView.accessibilityElementsHidden = true
+        view.addSubview(flashView)
         NotificationCenter.default.addObserver(self, selector: #selector(startClock), name: UIApplication.didBecomeActiveNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(stopClock), name: UIApplication.willResignActiveNotification, object: nil)
         startClock()
@@ -97,9 +125,13 @@ final class SlateViewController: UIViewController {
         let left = bounds.minX + margin
         let width = bounds.width - margin * 2
         let top = bounds.minY + (compact ? 24 : 36)
-        titleLabel.frame = CGRect(x: left, y: top, width: 150, height: 24)
-        statusLabel.frame = CGRect(x: left + width - 110, y: top, width: 110, height: 24)
-        statusDot.frame = CGRect(x: left + width - 88, y: top + 8.5, width: 7, height: 7)
+        titleLabel.frame = CGRect(x: left, y: top, width: 100, height: 24)
+        let settingsWidth: CGFloat = compact ? 76 : 92
+        settingsButton.frame = CGRect(x: left + width - settingsWidth, y: top - 7, width: settingsWidth, height: 38)
+        statusLabel.frame = CGRect(x: settingsButton.frame.minX - 82, y: top, width: 72, height: 24)
+        statusDot.frame = CGRect(x: statusLabel.frame.minX - 11, y: top + 8.5, width: 7, height: 7)
+        let clapWidth: CGFloat = compact ? 176 : 220
+        clapButton.frame = CGRect(x: bounds.midX - clapWidth / 2, y: top - 9, width: clapWidth, height: 42)
 
         let counterTop = top + 56
         let counterBottom = bounds.maxY - 156
@@ -131,6 +163,7 @@ final class SlateViewController: UIViewController {
         let clockWidth = max(0, bounds.maxX - margin - clockLeft)
         timecodeLabel.frame = CGRect(x: clockLeft, y: counterBottom + 36, width: clockWidth, height: 48)
         timecodeCaption.frame = CGRect(x: clockLeft, y: counterBottom + 98, width: clockWidth, height: 20)
+        flashView.frame = view.bounds
     }
 
     private func refresh() {
@@ -145,6 +178,40 @@ final class SlateViewController: UIViewController {
         lockButton.layer.borderColor = locked ? UIColor.clear.cgColor : SlateStyle.rule.cgColor
         lockButton.accessibilityHint = locked ? "Double tap to enable the slate controls" : "Double tap to disable all slate controls"
         hintLabel.text = locked ? "Double-tap to unlock" : "Double-tap to lock"
+        clapButton.setTitle("TAP TO \(settings.sound.title.uppercased())", for: .normal)
+        clapButton.accessibilityLabel = "Play \(settings.sound.title.lowercased()) slate sound"
+        timecodeCaption.text = "LOCAL TIME  ·  \(settings.framesPerSecond) FPS"
+    }
+
+    @objc private func playSlate() {
+        audioPlayer.play(settings.sound, volume: settings.volume)
+        guard settings.flashEnabled else { return }
+        if let window = view.window, flashView.superview !== window {
+            flashView.removeFromSuperview()
+            flashView.frame = window.bounds
+            window.addSubview(flashView)
+        }
+        flashView.superview?.bringSubviewToFront(flashView)
+        flashView.layer.removeAllAnimations()
+        flashView.alpha = 0.92
+        UIView.animate(
+            withDuration: 0.18,
+            delay: 0.035,
+            options: [.curveEaseOut, .allowUserInteraction],
+            animations: { [weak self] in self?.flashView.alpha = 0 },
+            completion: nil
+        )
+    }
+
+    @objc private func showSettings() {
+        let controller = SlateSettingsViewController(
+            settings: settings,
+            onChange: { [weak self] in self?.refresh() },
+            onPreview: { [weak self] in self?.playSlate() }
+        )
+        let navigation = UINavigationController(rootViewController: controller)
+        navigation.modalPresentationStyle = .formSheet
+        present(navigation, animated: true)
     }
 
     @objc private func lockTapped() {
@@ -173,7 +240,7 @@ final class SlateViewController: UIViewController {
     }
 
     private func updateClock() {
-        let text = timecode.string()
+        let text = SlateTimecode(framesPerSecond: settings.framesPerSecond).string()
         if timecodeLabel.text != text {
             timecodeLabel.text = text
             timecodeLabel.accessibilityValue = text
