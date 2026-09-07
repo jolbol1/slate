@@ -67,7 +67,7 @@ public enum SlateSoundMode: String, CaseIterable, Codable {
 
 /// Everything on the slate except the three counters and the lock.
 public struct SlateDetails: Codable, Equatable {
-    public static let cameraLetters = Array("ABCD").map(String.init)
+    public static let cameraLetters = Array("ABCDEFGHIJKLMNOPQRSTUVWXYZ").map(String.init)
 
     public var production = ""
     public var director = ""

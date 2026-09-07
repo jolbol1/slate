@@ -30,7 +30,8 @@ final class SlateDetailsViewController: UITableViewController, UITextFieldDelega
     private let focus: SlateTextField?
     private let onChange: () -> Void
     private var textFields: [SlateTextField: UITextField] = [:]
-    private let cameraControl = UISegmentedControl(items: SlateDetails.cameraLetters)
+    private let cameraStepper = UIStepper()
+    private let cameraLabel = UILabel()
     private let locationControl = UISegmentedControl(items: SlateLocation.allCases.map { $0.title })
     private let timeControl = UISegmentedControl(items: SlateTimeOfDay.allCases.map { $0.title })
     private let soundControl = UISegmentedControl(items: SlateSoundMode.allCases.map { $0.title })
@@ -57,11 +58,16 @@ final class SlateDetailsViewController: UITableViewController, UITextFieldDelega
         tableView.accessibilityIdentifier = "details-table"
         tableView.keyboardDismissMode = .interactive
 
-        cameraControl.addTarget(self, action: #selector(cameraChanged), for: .valueChanged)
+        cameraStepper.minimumValue = 0
+        cameraStepper.maximumValue = Double(SlateDetails.cameraLetters.count - 1)
+        cameraStepper.stepValue = 1
+        cameraStepper.wraps = true
+        cameraStepper.addTarget(self, action: #selector(cameraChanged), for: .valueChanged)
         locationControl.addTarget(self, action: #selector(locationChanged), for: .valueChanged)
         timeControl.addTarget(self, action: #selector(timeChanged), for: .valueChanged)
         soundControl.addTarget(self, action: #selector(soundChanged), for: .valueChanged)
-        cameraControl.accessibilityIdentifier = "camera-control"
+        cameraStepper.accessibilityIdentifier = "camera-stepper"
+        cameraStepper.accessibilityLabel = "Camera letter"
         locationControl.accessibilityIdentifier = "location-control"
         timeControl.accessibilityIdentifier = "time-control"
         soundControl.accessibilityIdentifier = "sound-mode-control"
@@ -99,7 +105,8 @@ final class SlateDetailsViewController: UITableViewController, UITextFieldDelega
     private func load() {
         let details = slate.details
         for (field, textField) in textFields { textField.text = details[field] }
-        cameraControl.selectedSegmentIndex = details.camera
+        cameraStepper.value = Double(details.camera)
+        showCameraLetter()
         locationControl.selectedSegmentIndex = SlateLocation.allCases.firstIndex(of: details.location) ?? 0
         timeControl.selectedSegmentIndex = SlateTimeOfDay.allCases.firstIndex(of: details.timeOfDay) ?? 0
         soundControl.selectedSegmentIndex = SlateSoundMode.allCases.firstIndex(of: details.soundMode) ?? 0
@@ -113,7 +120,7 @@ final class SlateDetailsViewController: UITableViewController, UITextFieldDelega
             cell.textField.addTarget(self, action: #selector(textChanged(_:)), for: .editingChanged)
             textFields[field] = cell.textField
             return cell
-        case .camera: return segmentCell("Camera", control: cameraControl)
+        case .camera: return cameraCell()
         case .location: return segmentCell("Location", control: locationControl)
         case .timeOfDay: return segmentCell("Time", control: timeControl)
         case .soundMode: return segmentCell("Sound", control: soundControl)
@@ -125,6 +132,34 @@ final class SlateDetailsViewController: UITableViewController, UITextFieldDelega
             cell.accessibilityIdentifier = "clear-details"
             return cell
         }
+    }
+
+    /// "Camera  A  [− +]": any of the 26 letters is a few taps away, and the stepper wraps.
+    private func cameraCell() -> UITableViewCell {
+        let cell = UITableViewCell(style: .default, reuseIdentifier: nil)
+        cell.textLabel?.text = "Camera"
+        cell.selectionStyle = .none
+        cameraLabel.font = SlateStyle.mono(22, weight: .semibold)
+        cameraLabel.textAlignment = .center
+        cameraLabel.accessibilityIdentifier = "camera-letter"
+        let row = UIStackView(arrangedSubviews: [cameraLabel, cameraStepper])
+        row.axis = .horizontal
+        row.alignment = .center
+        row.spacing = 16
+        row.translatesAutoresizingMaskIntoConstraints = false
+        cell.contentView.addSubview(row)
+        NSLayoutConstraint.activate([
+            cameraLabel.widthAnchor.constraint(equalToConstant: 32),
+            row.trailingAnchor.constraint(equalTo: cell.contentView.layoutMarginsGuide.trailingAnchor),
+            row.centerYAnchor.constraint(equalTo: cell.contentView.centerYAnchor),
+            cell.contentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 48)
+        ])
+        return cell
+    }
+
+    private func showCameraLetter() {
+        cameraLabel.text = slate.details.cameraLetter
+        cameraStepper.accessibilityValue = "Camera \(slate.details.cameraLetter)"
     }
 
     private func segmentCell(_ title: String, control: UISegmentedControl) -> UITableViewCell {
@@ -221,7 +256,8 @@ final class SlateDetailsViewController: UITableViewController, UITextFieldDelega
     // MARK: Segments
 
     @objc private func cameraChanged() {
-        slate.setCamera(cameraControl.selectedSegmentIndex)
+        slate.setCamera(Int(cameraStepper.value))
+        showCameraLetter()
         onChange()
     }
 

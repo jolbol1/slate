@@ -8,7 +8,7 @@ A native, offline UIKit slate targeting iOS 12 or later, including the original 
 - Shot starts at **A** and its +/− buttons move through **A–Z**, stopping at either end. Existing saved shot numbers map to letters (1 → A, 2 → B, etc.; values outside 1–26 clamp to A or Z). Scene, Take and lock state are preserved.
 - Take returns to 1 whenever Scene or Shot changes. Settings can turn this off. Settings can also step Take up by one after each clap.
 - **Written details**: production, director, camera (DP or operator), camera roll, sound roll, filter and notes. Tap the production title, any written line, or the roll tags to open the **Slate Details** sheet. Each keystroke saves. Text is limited to the width of a real slate line.
-- **Tags** toggle in place with one tap: camera letter A–D, INT/EXT, DAY/NIGHT and SYNC/MOS. The FPS tag opens a frame-rate picker.
+- **Tags** toggle in place with one tap: camera letter A–Z, INT/EXT, DAY/NIGHT and SYNC/MOS. The FPS tag opens a frame-rate picker.
 - The date comes from the device clock and is shown as, for example, 7 SEP 2026.
 - Double-tap the lock button within 0.6 seconds to lock or unlock. A single tap does nothing. While locked, the counters, tags, written lines and the details editor are all disabled.
 - **Tap to Clap** plays a short, locally bundled sync sound, drops the sticks and flashes the screen. It remains available while the slate is locked. Settings can switch between the natural clap and a clean beep, adjust volume, or turn the flash off.

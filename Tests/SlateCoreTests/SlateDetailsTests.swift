@@ -67,7 +67,7 @@ final class SlateDetailsTests: XCTestCase {
             defaults.set(Data(json.utf8), forKey: "slate.state.v1")
             let details = SlateStore(defaults: defaults).details
             XCTAssertEqual(details.production, "Keep me")
-            XCTAssertEqual(details.cameraLetter, "D")
+            XCTAssertEqual(details.cameraLetter, "Z")
             XCTAssertEqual(details.location, .interior)
             XCTAssertEqual(details.soundMode, .mos)
             XCTAssertEqual(details.roll, "ABCDEFGH")
@@ -83,18 +83,20 @@ final class SlateDetailsTests: XCTestCase {
         }
     }
 
-    func testCameraCyclesAThroughDAndSetterClamps() {
+    func testCameraCyclesAThroughZAndSetterClamps() {
         withStore { slate, _ in
-            var seen: [String] = []
-            for _ in 0..<5 {
-                seen.append(slate.details.cameraLetter)
+            var seen = ""
+            for _ in 0..<27 {
+                seen += slate.details.cameraLetter
                 slate.cycleCamera()
             }
-            XCTAssertEqual(seen, ["A", "B", "C", "D", "A"])
+            XCTAssertEqual(seen, "ABCDEFGHIJKLMNOPQRSTUVWXYZA")
             slate.setCamera(-4)
             XCTAssertEqual(slate.details.cameraLetter, "A")
             slate.setCamera(40)
-            XCTAssertEqual(slate.details.cameraLetter, "D")
+            XCTAssertEqual(slate.details.cameraLetter, "Z")
+            slate.setCamera(7)
+            XCTAssertEqual(slate.details.cameraLetter, "H")
         }
     }
 
