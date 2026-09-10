@@ -6,7 +6,7 @@ cd "$(dirname "$0")/.."
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 device="$1"; prefix="$2"
 out="build/shots"; mkdir -p "$out"
-bundle="com.james.local.slate2026"
+bundle="com.fullyfreeapps.slate"
 udid="$(xcrun simctl list devices available -j | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; print(next(x['udid'] for v in d.values() for x in v if x['name']=='$device'))")"
 xcrun simctl boot "$udid" 2>/dev/null || true
 
