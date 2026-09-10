@@ -128,8 +128,13 @@ final class SlateUITests: XCTestCase {
         app.buttons["24 fps"].tap()
         XCTAssertEqual(app.buttons["chip-fps"].value as? String, "24")
 
+        // Capture before XCTest restores the simulator orientation at teardown.
+        XCUIDevice.shared.orientation = .landscapeLeft
+        waitForButton(app.buttons["take-plus"])
+        snapshot(app, "landscape")
         lock.doubleTap()
         XCTAssertFalse(app.buttons["take-plus"].isEnabled)
+        snapshot(app, "landscape-locked")
     }
 
     /// Portrait: the stacked layout, the sheets, and the settings that change the take counter.
@@ -213,7 +218,7 @@ final class SlateUITests: XCTestCase {
     /// Attaches a named screenshot to the result bundle.
     @MainActor
     private func snapshot(_ app: XCUIApplication, _ name: String) {
-        let attachment = XCTAttachment(screenshot: app.screenshot())
+        let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         attachment.name = name
         attachment.lifetime = .keepAlways
         add(attachment)

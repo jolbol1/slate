@@ -18,30 +18,29 @@ run_test() {
         -only-testing:"SlateUITests/SlateUITests/$name" 2>&1 | grep -E "error:|failed|passed|Executed" || true
 }
 
-shoot() {
-    xcrun simctl launch "$udid" "$bundle" >/dev/null
-    sleep 3
-    xcrun simctl io "$udid" screenshot "$out/$prefix-$1.png" >/dev/null
-    echo "$out/$prefix-$1.png"
-}
-
 run_test testSlateFieldsCountersLockAndRelaunch
-shoot landscape-locked
 run_test testPortraitLayoutSheetsAndTakeSettings
-shoot portrait
 
-# Sheets are attached by the portrait test.
+# Capture from test attachments before XCTest resets simulator orientation.
+for test_name in testSlateFieldsCountersLockAndRelaunch testPortraitLayoutSheetsAndTakeSettings; do
 tmp="$(mktemp -d)"
-xcrun xcresulttool export attachments --path "build/$prefix-testPortraitLayoutSheetsAndTakeSettings.xcresult" --output-path "$tmp" >/dev/null
+xcrun xcresulttool export attachments --path "build/$prefix-$test_name.xcresult" --output-path "$tmp" >/dev/null
 python3 - "$tmp" "$out" "$prefix" <<'PY'
 import json, os, re, shutil, sys
 tmp, out, prefix = sys.argv[1:4]
 for test in json.load(open(os.path.join(tmp, "manifest.json"))):
     for a in test.get("attachments", []):
         name = a.get("suggestedHumanReadableName", "")
-        m = re.match(r"^(details-sheet|settings-sheet|portrait)_", name)
+        m = re.match(r"^(details-sheet|settings-sheet|portrait|landscape|landscape-locked)_", name)
         if m:
             shutil.copy(os.path.join(tmp, a["exportedFileName"]), os.path.join(out, f"{prefix}-{m.group(1)}.png"))
             print(os.path.join(out, f"{prefix}-{m.group(1)}.png"))
 PY
 rm -rf "$tmp"
+done
+
+# Bake screenshot orientation into PNG pixels for App Store size validation.
+for shot in "$out/$prefix-"*.png; do
+    swift scripts/normalize-screenshot.swift "$shot"
+    mv "${shot%.png}.normalized.png" "$shot"
+done
