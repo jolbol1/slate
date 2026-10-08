@@ -5,3 +5,25 @@ DerivedData/
 *.xcuserstate
 xcuserdata/
 .DS_Store
+
+# Local publishing correspondence, generated concepts and device recordings.
+APP_STORE.md
+APP_REVIEW_RESPONSE.md
+output/
+private/
+*.eml
+*.mp4
+*.MP4
+*.mov
+*.MOV
+
+# Credentials and signing exports must never be committed.
+.env
+.env.*
+!.env.example
+*.p8
+*.p12
+*.mobileprovision
+*.key
+*.pem
+*.xcarchive/

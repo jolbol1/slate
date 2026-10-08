@@ -3,7 +3,12 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
-slate_device_id="${1:-YOUR_DEVICE_UDID}"
+slate_device_id="${1:-}"
+if [ -z "$slate_device_id" ]; then
+    echo 'Usage: bash scripts/install-on-ipad.sh <device-udid>' >&2
+    echo 'Find your device identifier in Xcode → Window → Devices and Simulators.' >&2
+    exit 1
+fi
 slate_installer="$(command -v ios-deploy || true)"
 if [ -z "$slate_installer" ] && [ -x /opt/homebrew/bin/ios-deploy ]; then
     slate_installer=/opt/homebrew/bin/ios-deploy

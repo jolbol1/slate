@@ -4,10 +4,13 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
+if [ "$#" -ne 2 ] || [[ ! "$2" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+    echo 'Usage: scripts/screenshots.sh "Simulator name" output-prefix' >&2
+    exit 1
+fi
 device="$1"; prefix="$2"
 out="build/shots"; mkdir -p "$out"
-bundle="com.fullyfreeapps.slate"
-udid="$(xcrun simctl list devices available -j | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; print(next(x['udid'] for v in d.values() for x in v if x['name']=='$device'))")"
+udid="$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin)["devices"]; print(next(x["udid"] for v in d.values() for x in v if x["name"]==sys.argv[1]))' "$device")"
 xcrun simctl boot "$udid" 2>/dev/null || true
 
 run_test() {
@@ -15,7 +18,12 @@ run_test() {
     rm -rf "$result"
     xcodebuild -project Slate.xcodeproj -scheme Slate -sdk iphonesimulator -derivedDataPath build \
         -destination "id=$udid" test CODE_SIGNING_ALLOWED=NO -resultBundlePath "$result" \
-        -only-testing:"SlateUITests/SlateUITests/$name" 2>&1 | grep -E "error:|failed|passed|Executed" || true
+        IPHONEOS_DEPLOYMENT_TARGET=15.0 \
+        -only-testing:"SlateUITests/SlateUITests/$name" >"build/$prefix-$name.log" 2>&1 || {
+        tail -60 "build/$prefix-$name.log" >&2
+        return 1
+    }
+    grep -E "error:|failed|passed|Executed" "build/$prefix-$name.log" || true
 }
 
 run_test testSlateFieldsCountersLockAndRelaunch

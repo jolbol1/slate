@@ -1,68 +1,111 @@
-# Slate for iPad
+<p align="center">
+  <img src="Slate/Assets.xcassets/AppIcon.appiconset/AppIcon.png" width="96" alt="Slate app icon">
+</p>
 
-A native, offline UIKit slate targeting iOS 12 or later, including the original iPad Air. Open `Slate.xcodeproj` in Xcode 16 or later. There are no third-party dependencies.
+<h1 align="center">Slate</h1>
+<p align="center">A simple digital clapperboard for iPhone and iPad.</p>
+<p align="center"><strong>Free. Offline. No ads, accounts, subscriptions or tracking.</strong></p>
 
-**Slate layout.** The striped clapper bar across the top is the clap button. Under it sit the production title, the date and the lock status, then a row of tags: camera roll, camera letter, sound roll, frame rate, INT/EXT, DAY/NIGHT and SYNC/MOS. The three big counter cards are Scene, Shot and Take. Below them are the written lines for director, camera (DP or operator), filter and notes, and at the bottom the lock button and the clock.
+![Slate in landscape on iPhone](docs/screenshots/iphone-landscape.png)
 
-- Scene and Take start at 1, with independent +/− buttons (0–9999).
-- Shot starts at **A** and its +/− buttons move through **A–Z**, stopping at either end. Existing saved shot numbers map to letters (1 → A, 2 → B, etc.; values outside 1–26 clamp to A or Z). Scene, Take and lock state are preserved.
-- Take returns to 1 whenever Scene or Shot changes. Settings can turn this off. Settings can also step Take up by one after each clap, after a delay of 0 to 120 seconds (10 by default) so the slate still shows the take that was just marked. The status shows a countdown, and a manual change, another clap or the lock cancels the pending step.
-- **Written details**: production, director, camera (DP or operator), camera roll, sound roll, filter and notes. Tap the production title, any written line, or the roll tags to open the **Slate Details** sheet. Each keystroke saves. Text is limited to the width of a real slate line.
-- **Tags** toggle in place with one tap: camera letter A–Z, INT/EXT, DAY/NIGHT and SYNC/MOS. The FPS tag opens a frame-rate picker.
-- The date comes from the device clock and is shown as, for example, 7 SEP 2026.
-- Double-tap the lock button within 0.6 seconds to lock or unlock. A single tap does nothing. While locked, the counters, tags, written lines and the details editor are all disabled.
-- **Tap to Clap** plays a short, locally bundled sync sound, drops the sticks and flashes the screen. It remains available while the slate is locked. Settings can switch between the natural clap and a clean beep, adjust volume, or turn the flash off.
-- Counters, details, lock state and settings save on every change in this app's local UserDefaults and restore on reopening. Saves from earlier versions open with empty details. Deleting the app removes its saved values. Reinstall over the existing app with the same bundle identifier to retain them.
-- **Settings** groups: slate sound (clap or beep, volume, screen flash, preview), take counter (reset on new scene or shot, next take after clap with its delay), clock timecode (24, 25, 30, 48, 50 or 60 fps), slate (edit details, reset counters to Scene 1 · A · Take 1) and the Fully Free Apps promise. Reset and clear actions ask for confirmation.
-- Portrait and landscape layouts on iPad and iPhone, large high-contrast numbers, and an awake display while the app is active.
-- A continuously updating `HH:MM:SS:FF` local time-of-day reference at **24 fps** by default, including while locked. It follows the device clock; it is not synced to a camera or an external timecode source.
-- VoiceOver and Switch Control can activate the lock with their normal accessibility activation gesture. Every tag and written line has an accessibility label and value.
+Keep scene, shot and take visible on set. Tap the clapper bar for a clap or beep, add production details, and lock the controls between takes. Slate saves your values locally, ready for the next session.
 
-The app follows the **Fully Free Apps** promise: free to download and use, with no ads, in-app purchases, accounts, analytics or tracking. It has no network code or third-party SDKs. Fully Free Apps is a trading name of MWD Studios Ltd. See [APP_STORE.md](APP_STORE.md) for the publishing plan and [PRIVACY.md](PRIVACY.md) for the privacy-policy draft.
+Built with Swift and UIKit. No third-party dependencies or network requests.
 
-## Install on your iPad for free
+[Website](https://fullyfreeapps.com/slate) · [Support](https://fullyfreeapps.com/support) · [Privacy](PRIVACY.md)
 
-1. Open `Slate.xcodeproj` on your Mac.
-2. In **Xcode → Settings → Accounts**, add your normal Apple Account. Accept Apple's free developer agreement if prompted. You do not need a paid Apple Developer Program membership.
-3. Connect the iPad by USB, unlock it, and trust the Mac if prompted.
-4. Select the **Slate** project, then the **Slate** app target → **Signing & Capabilities**. Keep **Automatically manage signing** enabled and choose your **Personal Team**. If the bundle identifier is unavailable, change `com.james.local.slate2026` to a unique identifier once.
-5. Select your iPad as the run destination in Xcode's top toolbar.
-6. **iOS 16 and later only:** If prompted, enable **Settings → Privacy & Security → Developer Mode** on the iPad, restart, and confirm. Pair with Xcode first if that option isn't visible.
-7. Press **⌘R** in Xcode. If the iPad asks you to trust the developer, follow its instructions under **Settings → General → VPN & Device Management**.
+## Screenshots
 
-After installation, unplug the iPad. The app works entirely offline. With a free Personal Team, the provisioning profile expires **7 days from issuance**. Build and run it again from Xcode to renew it. For a full week of use, install shortly before you need it, and keep the Mac available if it needs renewal. Keep the app installed and use the same bundle identifier when renewing.
+<p align="center">
+  <img src="docs/screenshots/iphone-portrait.png" width="270" alt="Slate portrait layout with scene, shot, take and production details">
+  &nbsp;
+  <img src="docs/screenshots/iphone-settings.png" width="270" alt="Slate settings for sound, screen flash, take counter and clock frame rate">
+</p>
 
-The in-app lock prevents number changes; it does not stop Home gestures or the physical lock button. If you also need to prevent leaving the app, use iPad Guided Access.
+Real simulator captures with sample production data. The landscape view makes the counters prominent; portrait adds room for written details.
 
-Apple references: [Free Personal Team limits](https://developer.apple.com/help/account/basics/about-your-developer-account/), [Developer Mode](https://developer.apple.com/documentation/xcode/enabling-developer-mode-on-a-device).
+## Features
 
-## Development
+- **Scene, shot and take:** numeric scene/take controls and A–Z shot letters.
+- **Production details:** title, director, camera operator, rolls, filter and notes.
+- **Quick tags:** camera letter, INT/EXT, DAY/NIGHT and SYNC/MOS.
+- **Clap or beep:** bundled sound, adjustable volume and optional screen flash.
+- **Double-tap lock:** prevents accidental edits while keeping the clapper available. Supports accessibility activation with VoiceOver and Switch Control.
+- **Take automation:** optional reset on a new scene/shot and automatic next take after a configurable 0–120 second delay.
+- **Clock reference:** local time in `HH:MM:SS:FF` at 24, 25, 30, 48, 50 or 60 fps.
+- **Local persistence:** counters, details and preferences restore when you reopen the app.
+- **iPhone and iPad:** portrait and landscape layouts; display stays awake while Slate is active.
 
-If command-line tools are selected instead of Xcode, prefix commands with:
+The clock is a visual time-of-day reference. It is **not externally synchronised timecode** and does not output timecode to recording equipment. The slate lock protects app controls, not the device's Home gestures or power button.
+
+## Build and run
+
+Open `Slate.xcodeproj` in Xcode and select the **Slate** scheme. There are no packages to install.
+
+### Simulator
+
+Choose an installed iPhone or iPad simulator and run the app. The project retains an iOS 12 deployment target for legacy local builds. Recent Xcode versions may require an iOS 15 minimum for simulator builds; use this command-line override:
 
 ```sh
 export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+xcodebuild -project Slate.xcodeproj -scheme Slate \
+  -sdk iphonesimulator -derivedDataPath build \
+  IPHONEOS_DEPLOYMENT_TARGET=15.0 CODE_SIGNING_ALLOWED=NO build
 ```
 
-Run persistence, boundary and locking tests on the Mac:
+### Your iPhone or iPad
+
+1. Add your Apple Account in **Xcode → Settings → Accounts**.
+2. Under the app target's **Signing & Capabilities**, choose your own team and a unique bundle identifier.
+3. Connect and trust your device, select it as the run destination, and press **⌘R**.
+4. Follow any device prompts for Developer Mode or developer trust.
+
+This repository's bundle identifier and team ID identify the publishing account; they do not grant signing access. Use your own signing configuration for personal builds. Free Personal Team provisioning is temporary and requires periodic rebuilding; see [Apple's membership comparison](https://developer.apple.com/support/compare-memberships/).
+
+The source retains compatibility paths for iOS 12, including the original iPad Air. Deployment to older devices depends on your Xcode/toolchain and device support. The submitted App Store build uses an **iOS 15 minimum**; that is separate from the legacy source target.
+
+For an already configured legacy device with `ios-deploy` installed:
+
+```sh
+bash scripts/install-on-ipad.sh <device-udid>
+```
+
+Find the identifier in **Xcode → Window → Devices and Simulators**. Keep the same bundle identifier and install over the existing app to retain its local data.
+
+## Tests and screenshots
+
+Core tests cover counters, persistence, details, settings and clock formatting:
 
 ```sh
 swift test
 ```
 
-Build for a simulator (no signing account required):
+The UI tests exercise editing, locking, relaunch persistence, take automation and both orientations. To run them and export screenshot attachments:
 
 ```sh
-xcodebuild -project Slate.xcodeproj -scheme Slate -sdk iphonesimulator -derivedDataPath build build CODE_SIGNING_ALLOWED=NO
+bash scripts/screenshots.sh "iPhone 17 Pro Max" iphone
+bash scripts/screenshots.sh "iPad Pro 13-inch (M5)" ipad
 ```
 
-With an iPad simulator installed, choose it in Xcode and press **⌘U** to exercise the counter controls, details editor, lock, relaunch persistence, and portrait/landscape layouts. The UI tests launch the app with `--reset-state`, which clears the app's saved values in that simulator.
+Use simulator names installed on your Mac (`xcrun simctl list devices available`). Results and screenshots are written under `build/`. The screenshot script applies the iOS 15 simulator override. **UI tests reset Slate's data in the selected simulator.**
 
-To run the UI tests on one simulator and collect screenshots into `build/shots`:
+## Project layout
 
-```sh
-scripts/screenshots.sh "iPad Air 11-inch (M4)" ipad
-scripts/screenshots.sh "iPhone 17" iphone
-```
+| Path | Purpose |
+| --- | --- |
+| `Slate/` | UIKit screens, audio, assets and privacy manifest |
+| `Sources/SlateCore/` | Foundation-based state, persistence and timecode logic |
+| `Tests/SlateCoreTests/` | Swift Package core tests |
+| `SlateUITests/` | Device/simulator UI tests and screenshot capture |
+| `scripts/` | Local installation, screenshots and asset generation |
+| `docs/screenshots/` | README screenshots |
 
-The clap and beep files are original, deterministic PCM audio generated by `scripts/generate-sounds.py`. They can be regenerated without downloading anything.
+The bundled clap and beep are generated locally by `scripts/generate-sounds.py`. The app icon was created for Slate. No third-party SDKs, remote media feeds or paid services are required to run the app.
+
+## Privacy and publishing
+
+Slate stores its data in local `UserDefaults`. It does not request microphone, camera, location, contacts or photo-library access. See [PRIVACY.md](PRIVACY.md) for details.
+
+Slate is published by **MWD Studios Ltd** under **Fully Free Apps**. Slate remains free; this is not a pricing promise for other apps from the publisher.
+
+Signing credentials, device recordings and private App Review correspondence are excluded from this repository. No open-source licence has been granted in this repository; public source visibility alone does not grant general reuse rights.
